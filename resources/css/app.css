@@ -1,0 +1,143 @@
+/* 全体の背景と中央寄せ */
+body {
+    background-color: #f7f7f7;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+.attendance-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+/* 画面タイトル */
+.page-title {
+    font-size: 24px;
+    font-weight: bold;
+    border-left: 5px solid #000;
+    padding-left: 15px;
+    margin-bottom: 30px;
+}
+
+/* 月選択ナビゲーション */
+.month-selector {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    margin-bottom: 25px;
+    background-color: #fff;
+    padding: 15px 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.month-nav-btn {
+    color: #b0b0b0;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.month-nav-btn:hover {
+    color: #333;
+}
+
+.current-month-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* テーブルデザイン */
+.table-wrapper {
+    background-color: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+}
+
+.attendance-table {
+    width: 100%;
+    border-collapse: separate;
+    /* 💡 見出しカードとデータカードの間の隙間もすべて 4px で統一します */
+    border-spacing: 0 4px;
+    text-align: center;
+}
+
+/* 💡 見出し行（th）を「白いカード」にする設定 */
+.attendance-table th {
+    background-color: #fff;
+    /* 💡 見出しの後ろを真っ白にします */
+    color: #333;
+    /* 💡 白背景で見えにくくならないよう、文字色を少し濃くします */
+    font-size: 13px;
+    padding: 14px 15px;
+    /* 💡 データ行（td）と同じ上下余白にして高さを揃えます */
+    font-weight: bold;
+    border: none;
+
+    /* データ行と同じ軽い影をつけて立体感を出します */
+    border-top: 1px solid rgba(0, 0, 0, 0.01);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+/* 💡 見出し行の両端も丸くします */
+.attendance-table thead tr th:first-child {
+    border-radius: 6px 0 0 6px;
+    border-left: 1px solid rgba(0, 0, 0, 0.01);
+}
+
+.attendance-table thead tr th:last-child {
+    border-radius: 0 6px 6px 0;
+    border-right: 1px solid rgba(0, 0, 0, 0.01);
+}
+
+/* 各データ行を「白いカード」にします */
+.attendance-table td {
+    background-color: #fff;
+    padding: 14px 15px;
+    font-size: 14px;
+    color: #333;
+    border: none;
+
+    border-top: 1px solid rgba(0, 0, 0, 0.01);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+/* データ行の両端を丸くする設定 */
+.attendance-table tbody tr td:first-child {
+    border-radius: 6px 0 0 6px;
+    border-left: 1px solid rgba(0, 0, 0, 0.01);
+}
+
+.attendance-table tbody tr td:last-child {
+    border-radius: 0 6px 6px 0;
+    border-right: 1px solid rgba(0, 0, 0, 0.01);
+}
+
+/* 行のホバー効果 */
+.attendance-table tbody tr:hover td {
+    background-color: #fafafa;
+}
+
+/* 各列の微調整 */
+.col-date {
+    font-weight: 500;
+}
+
+.col-time {
+    color: #444;
+}
+
+/* 詳細リンク */
+.detail-link {
+    color: #000;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.detail-link:hover {
+    text-decoration: underline;
+}
