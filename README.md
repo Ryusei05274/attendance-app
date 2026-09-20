@@ -9,11 +9,12 @@ COACHTECH 勤怠管理アプリ (attendance-app)
 
 📊 ER図
 本プロジェクトのデータベース構造（エンティティ関係）は以下の通りです。
+```mermaid
 erDiagram
-    users ||--o{ attendances : "1人のユーザーは複数の勤怠データを持つ"
-    users ||--o{ attendance_corrections : "1人のユーザーは複数の修正申請を出す"
-    attendances ||--o{ break_logs : "1日の勤怠に対し複数の休憩が発生する"
-    attendances ||--o{ attendance_corrections : "1回の勤怠に対し複数の修正申請が紐づく"
+    users ||--o{ attendances : "1"
+    users ||--o{ attendance_corrections : "2"
+    attendances ||--o{ break_logs : "3"
+    attendances ||--o{ attendance_corrections : "4"
 
     users {
         bigint_unsigned id PK
