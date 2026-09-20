@@ -9,6 +9,7 @@ COACHTECH 勤怠管理アプリ (attendance-app)
 
 📊 ER図
 本プロジェクトのデータベース構造（エンティティ関係）は以下の通りです。
+
 ```mermaid
 erDiagram
     users ||--o{ attendances : "1"
@@ -52,7 +53,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-
+```
 
 🛠️ 使用技術
 プロジェクトの開発および実行に使用した技術スタック一覧です。
