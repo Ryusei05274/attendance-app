@@ -8,21 +8,26 @@ stateDiagram-v2
     state "ログイン画面 (管理者)\n(/admin/login)" as 管理者_ログイン画面:::unauth
 
     state "【管理者専用エリア】" as 管理者エリア {
-        state "スタッフ一覧画面 (Top)\n(/admin/staff/list)" as スタッフ一覧:::admin
-        state "スタッフ別勤怠一覧画面\n(/admin/attendance/staff/{user_id})" as スタッフ別勤怠:::admin
-        state "勤怠一覧画面 (管理者)\n(/admin/attendance/list)" as 勤怠一覧_G:::admin
-        state "勤怠詳細画面 (管理者)\n(/admin/attendance/{id})" as 勤怠詳細_G:::admin
-        state "申請一覧画面 (管理者)\n(/stamp_correction_request/list)" as 申請一覧_G:::admin
-        state "修正申請承認画面\n(/stamp_correction_request/approve/{attendance_correct_request_id})" as 承認画面:::admin
+        state "US012: スタッフ一覧画面\n(/admin/staff/list)" as スタッフ一覧:::admin
+        state "US013: スタッフ毎の月次勤怠一覧画面\n(/admin/attendance/staff/{id})" as 月次勤怠一覧:::admin
+        state "US010: 日次勤怠一覧画面\n(/admin/attendance/list)" as 日次勤怠一覧:::admin
+        state "US011: 勤怠詳細・修正画面\n(/admin/attendance/{id})" as 勤怠詳細:::admin
+        state "US014: 修正申請一覧画面\n(/stamp_correction_request/list)" as 申請一覧:::admin
+        state "US015: 修正申請承認画面\n(/stamp_correction_request/approve/{attendance_correct_request_id})" as 承認画面:::admin
 
-        [*] --> スタッフ一覧
-        スタッフ一覧 --> スタッフ別勤怠 : スタッフを選択
-        スタッフ一覧 --> 勤怠一覧_G : 「全社勤怠一覧」ボタン
-        勤怠一覧_G --> 勤怠詳細_G : データを変更・確認
-        スタッフ一覧 --> 申請一覧_G : 「未承認の申請」通知など
-        申請一覧_G --> 承認画面 : 「承認する」ボタン
+        [*] --> 日次勤怠一覧 : ※システム全体のトップと想定
+        
+        %% 表の通りにルートを修正
+        スタッフ一覧 --> 月次勤怠一覧 : FN042: 「詳細」を押す
+        月次勤怠一覧 --> 勤怠詳細 : FN046: 「詳細」を押す
+        日次勤怠一覧 --> 勤怠詳細 : FN036: 「詳細」を押す
+        申請一覧 --> 承認画面 : FN049: 「詳細」を押す
+        
+        %% その他想定されるメニュー遷移など
+        日次勤怠一覧 --> スタッフ一覧 : メニュー切り替え
+        日次勤怠一覧 --> 申請一覧 : メニュー切り替え
     }
 
-    管理者_ログイン画面 --> スタッフ一覧 : ログイン成功
+    管理者_ログイン画面 --> 日次勤怠一覧 : ログイン成功
     管理者エリア --> 管理者_ログイン画面 : ログアウト
 ```
