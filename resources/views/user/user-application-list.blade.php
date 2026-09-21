@@ -14,91 +14,100 @@
         <label class="application__tab--label" for="tab1">承認待ち</label>
         <input class="application__tab--input" id="tab2" type="radio" name="tab_item">
         <label class="application__tab--label" for="tab2">承認済み</label>
-        
-        <!-- 💡 承認待ちタブ -->
         <div class="tab__content" id="content1">
             <table class="table">
-                <thead>
-                    <tr class="table__row">
-                        <th class="table__header"><p class="table__header--item">状態</p></th>
-                        <th class="table__header"><p class="table__header--item">名前</p></th>
-                        <th class="table__header"><p class="table__header--item">対象日時</p></th>
-                        <th class="table__header"><p class="table__header--item">申請理由</p></th>
-                        <th class="table__header"><p class="table__header--item">申請日時</p></th>
-                        <th class="table__header"><p class="table__header--item">詳細</p></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{-- 💡 @foreach と @if は 💡 --}}
-                    {{-- 💡 <tr>行を丸ごと包み込む正しい位置に修正しました 💡 --}}
-                    @foreach ($formattedApplications as $application)
-                        @if ($application['approval_status'] === '承認待ち')
-                        <tr class="table__row">
-                            <td class="table__description">
-                                <p class="table__description--item">{{ $application['approval_status'] }}</p>
-                            </td>
-                            <td class="table__description">
-                                <p class="table__description--item">{{ $user->name }}</p>
-                            </td>
-                            <td class="table__description">
-                                <p class="table__description--item">{{ $application['date'] }}</p>
-                            </td>
-                            <td class="table__description">
-                                <p class="table__description--item">{{ $application['comment'] ?? 'なし' }}</p>
-                            </td>
-                            <td class="table__description">
-                                <p class="table__description--item">{{ $application['application_date'] }}</p>
-                            </td>
-                            <td class="table__description">
-                                <a class="table__item--detail-link" href="{{ url('/application/' . $application['id']) }}">詳細</a>
-                            </td>
-                        </tr>
-                        @endif
-                    @endforeach
-                </tbody>
+                <tr class="table__row">
+                    <th class="table__header">
+                        <p class="table__header--item">状態</p>
+                    </th>
+                    <th class="table__header">
+                        <p class="table__header--item">名前</p>
+                    </th>
+                    <th class="table__header">
+                        <p class="table__header--item">対象日時</p>
+                    </th>
+                    <th class="table__header">
+                        <p class="table__header--item">申請理由</p>
+                    </th>
+                    <th class="table__header">
+                        <p class="table__header--item">申請日時</p>
+                    </th>
+                    <th class="table__header">
+                        <p class="table__header--item">詳細</p>
+                    </th>
+                </tr>
+                @foreach ($formattedApplications as $application)
+                @if ($application['approval_status'] === '承認待ち')
+                <tr class="table__row">
+                    <td class="table__description">
+                        <p class="table__description--item">{{ $application['approval_status'] }}</p>
+                    </td>
+                    <td class="table__description">
+                        <p class="table__description--item">{{ $user->name }}</p>
+                    </td>
+                    <td class="table__description">
+                        <p class="table__description--item">{{ $application['date'] }}</p>
+                    </td>
+                    <td class="table__description">
+                        <p class="table__description--item">{{ $application['comment'] ?? 'なし' }}</p>
+                    </td>
+                    <td class="table__description">
+                        <p class="table__description--item">{{ $application['application_date'] }}</p>
+                    </td>
+                    <td class="table__description">
+                        <a class="table__item--detail-link" href="{{ url('/application/' . $application['id']) }}">詳細</a>
+                    </td>
+                </tr>
+                @endif
+                @endforeach
             </table>
         </div>
-
-        <!-- 💡 承認済みタブ -->
         <div class="tab__content" id="content2">
             <table class="table">
-                <thead>
-                    <tr class="table__row">
-                        <th class="table__header"><p class="table__header--item">状態</p></th>
-                        <th class="table__header"><p class="table__header--item">名前</p></th>
-                        <th class="table__header"><p class="table__header--item">対象日時</p></th>
-                        <th class="table__header"><p class="table__header--item">申請理由</p></th>
-                        <th class="table__header"><p class="table__header--item">申請日時</p></th>
-                        <th class="table__header"><p class="table__header--item">詳細</p></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{-- 💡 承認済み側も同様に正しい入れ子構造に修正しました 💡 --}}
-                    @foreach ($formattedApplications as $application)
-                        @if ($application['approval_status'] === '承認済み')
-                        <tr class="table__row">
-                            <td class="table__description">
-                                <p class="table__description--item">{{ $application['approval_status'] }}</p>
-                            </td>
-                            <td class="table__description">
-                                <p class="table__description--item">{{ $user->name }}</p>
-                            </td>
-                            <td class="table__description">
-                                <p class="table__description--item">{{ $application['date'] }}</p>
-                            </td>
-                            <td class="table__description">
-                                <p class="table__description--item">{{ $application['comment'] ?? 'なし' }}</p>
-                            </td>
-                            <td class="table__description">
-                                <p class="table__description--item">{{ $application['application_date'] }}</p>
-                            </td>
-                            <td class="table__description">
-                                <a class="table__item--detail-link" href="{{ url('/application/' . $application['id']) }}">詳細</a>
-                            </td>
-                        </tr>
-                        @endif
-                    @endforeach
-                </tbody>
+                <tr class="table__row">
+                    <th class="table__header">
+                        <p class="table__header--item">状態</p>
+                    </th>
+                    <th class="table__header">
+                        <p class="table__header--item">名前</p>
+                    </th>
+                    <th class="table__header">
+                        <p class="table__header--item">対象日時</p>
+                    </th>
+                    <th class="table__header">
+                        <p class="table__header--item">申請理由</p>
+                    </th>
+                    <th class="table__header">
+                        <p class="table__header--item">申請日時</p>
+                    </th>
+                    <th class="table__header">
+                        <p class="table__header--item">詳細</p>
+                    </th>
+                </tr>
+                @foreach ($formattedApplications as $application)
+                @if ($application['approval_status'] === '承認済み')
+                <tr class="table__row">
+                    <td class="table__description">
+                        <p class="table__description--item">{{ $application['approval_status'] }}</p>
+                    </td>
+                    <td class="table__description">
+                        <p class="table__description--item">{{ $user->name }}</p>
+                    </td>
+                    <td class="table__description">
+                        <p class="table__description--item">{{ $application['date'] }}</p>
+                    </td>
+                    <td class="table__description">
+                        <p class="table__description--item">{{ $application['comment'] ?? 'なし' }}</p>
+                    </td>
+                    <td class="table__description">
+                        <p class="table__description--item">{{ $application['application_date'] }}</p>
+                    </td>
+                    <td class="table__description">
+                        <a class="table__item--detail-link" href="{{ url('/application/' . $application['id']) }}">詳細</a>
+                    </td>
+                </tr>
+                @endif
+                @endforeach
             </table>
         </div>
     </div>

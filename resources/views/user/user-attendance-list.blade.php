@@ -1,63 +1,65 @@
 @extends('layouts.app')
 
-@section('content')
-
-<head>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-
-<div class="attendance-container">
-    {{-- 画面タイトル --}}
-    <h1 class="page-title">勤怠一覧</h1>
-
-    {{-- 月選択ナビゲーション (FN024) --}}
-    <div class="month-selector">
-        <a href="{{ route('attendance.list', ['month' => $prevMonth]) }}" class="month-nav-btn">← 前月</a>
-        
-        <div class="current-month-box">
-            <span class="calendar-icon">📅</span>
-            <span class="current-month-text">{{ $currentMonth }}</span>
-        </div>
-        
-        <a href="{{ route('attendance.list', ['month' => $nextMonth]) }}" class="month-nav-btn">翌月 →</a>
-    </div>
-
-    {{-- 勤怠一覧テーブル (FN023 / FN025) --}}
-    <div class="table-wrapper">
-        <table class="attendance-table">
-            <thead>
-                <tr>
-                    <th>日付</th>
-                    <th>出勤</th>
-                    <th>退勤</th>
-                    <th>休憩</th>
-                    <th>合計</th>
-                    <th>詳細</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($formattedAttendanceRecords as $attendanceRecord)
-                <tr>
-                    {{-- 日付 --}}
-                    <td class="col-date">{{ $attendanceRecord['date'] }}</td>
-                    
-                    {{-- 出勤・退勤・休憩・合計（空の場合は空白になります） --}}
-                    <td class="col-time">{{ $attendanceRecord['clock_in'] ?? '' }}</td>
-                    <td class="col-time">{{ $attendanceRecord['clock_out'] ?? '' }}</td>
-                    <td class="col-time">{{ $attendanceRecord['total_break_time'] ?? '' }}</td>
-                    <td class="col-time">{{ $attendanceRecord['total_time'] ?? '' }}</td>
-                    
-                    {{-- 詳細リンク --}}
-                    <td class="col-detail">
-                        @if (!empty($attendanceRecord['id']))
-            <a href="{{ url('/attendance/detail/' . $attendanceRecord['id']) }}" class="detail-link">詳細</a>
-                        @endif
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-</div>
+@section('css')
+@vite('resources/css/user/user-attendance-list.css')
 @endsection
 
+@section('content')
+<div class="attendance-list__content">
+    <div class="content__header">
+        <h1 class="content__header--item">勤怠一覧</h1>
+    </div>
+    <div class="content__menu">
+        <a class="previous-month" href="?date={{ $previousMonth }}">前月</a>
+        <p class="current-month">{{ $date->format('Y/m') }}</p>
+        <a class="next-month" href="?date={{ $nextMonth }}">翌月</a>
+    </div>
+    <table class="table">
+        <tr class="table__row">
+            <th class="table__header">
+                <p class="table__header--item">日付</p>
+            </th>
+            <th class="table__header">
+                <p class="table__header--item">出勤</p>
+            </th>
+            <th class="table__header">
+                <p class="table__header--item">退勤</p>
+            </th>
+            <th class="table__header">
+                <p class="table__header--item">休憩</p>
+            </th>
+            <th class="table__header">
+                <p class="table__header--item">合計</p>
+            </th>
+            <th class="table__header">
+                <p class="table__header--item">詳細</p>
+            </th>
+        </tr>
+        @foreach($formattedAttendanceRecords as $attendanceRecord)
+        <tr class="table__row">
+            <td class="table__description">
+                <p class="table__description--item">{{ $attendanceRecord['date'] }}</p>
+            </td>
+            <td class="table__description">
+                <p class="table__description--item">{{ $attendanceRecord['clock_in'] }}
+                </p>
+            </td>
+            <td class="table__description">
+                <p class="table__description--item">{{ $attendanceRecord['clock_out'] }}</p>
+            </td>
+            <td class="table__description">
+                <p class="table__description--item">{{ $attendanceRecord['total_break_time'] ? \Carbon\Carbon::parse($attendanceRecord['total_break_time'])->format('G:i') : '' }}</p>
+            </td>
+            <td class="table__description">
+                <p class="table__description--item">{{ $attendanceRecord['total_time'] ? \Carbon\Carbon::parse($attendanceRecord['total_time'])->format('G:i') : '' }}</p>
+            </td>
+            <td class="table__description">
+                @if (!empty($attendanceRecord['id']))
+                <a class="table__item--detail-link" href="{{ url('/attendance/' . $attendanceRecord['id']) }}">詳細</a>
+                @endif
+            </td>
+        </tr>
+        @endforeach
+    </table>
+</div>
+@endsection

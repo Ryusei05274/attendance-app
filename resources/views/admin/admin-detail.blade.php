@@ -54,7 +54,7 @@
                     {{-- 休憩は「休憩」「休憩1」「休憩2」…とセクションを分けて表示 --}}
                     @php
                         $breaks = (isset($attendanceRecord['breaks']) && is_array($attendanceRecord['breaks']))
-                            ? $attendanceRecord['breaks'] : [];;
+                            ? $attendanceRecord['breaks'] : [];
                     @endphp
                     @foreach($breaks as $index => $break)
                         <div class="form__group">

@@ -12,8 +12,8 @@ stateDiagram-v2
         state "スタッフ別勤怠一覧画面\n(/admin/attendance/staff/{user_id})" as スタッフ別勤怠:::admin
         state "勤怠一覧画面 (管理者)\n(/admin/attendance/list)" as 勤怠一覧_G:::admin
         state "勤怠詳細画面 (管理者)\n(/admin/attendance/{id})" as 勤怠詳細_G:::admin
-        state "申請一覧画面 (管理者)\n(/admin/attendance/correction-request/list)" as 申請一覧_G:::admin
-        state "修正申請承認画面\n(/admin/.../approve/{id})" as 承認画面:::admin
+        state "申請一覧画面 (管理者)\n(/stamp_correction_request/list)" as 申請一覧_G:::admin
+        state "修正申請承認画面\n(/stamp_correction_request/approve/{attendance_correct_request_id})" as 承認画面:::admin
 
         [*] --> スタッフ一覧
         スタッフ一覧 --> スタッフ別勤怠 : スタッフを選択

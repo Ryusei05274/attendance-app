@@ -8,12 +8,9 @@
 <div class="attendance__content">
     {{-- 見出し階層を h1 から開始するためのページ見出し（Figmaに表示タイトルが無いため視覚的には非表示） --}}
     <h1 class="attendance__heading">勤怠登録</h1>
-    
-    {{-- 💡 コントローラーから届く最新の $status を表示するように修正 --}}
     <div class="attendance__status">
-        <p class="attendance__status--item">{{ $status }}</p>
+        <p class="attendance__status--item">{{ $user->attendance_status }}</p>
     </div>
-    
     <form class="attendance__form" action="/attendance" method="post">
         @csrf
         <div class="current-date">
@@ -22,20 +19,15 @@
         <div class="current-time">
             <input class="current-time__item" type="text" id="currentTime" value="{{ $formattedTime }}" readonly>
         </div>
-        
-        {{-- 💡 コメントアウトを解除し、最新の $status でボタンを切り替えます --}}
         <div class="attendance__button">
-            @if($status === '勤務外')
+            @if($user->attendance_status === '勤務外')
                 <button class="attendance__button--submit--clock-in" type="submit" name="action" value="clock_in">出勤</button>
-            
-            @elseif($status === '出勤中')
+            @elseif($user->attendance_status === '出勤中')
                 <button class="attendance__button--submit--clock-out" type="submit" name="action" value="clock_out">退勤</button>
                 <button class="attendance__button--submit--break-in" type="submit" name="action" value="break_in">休憩入</button>
-            
-            @elseif($status === '休憩中')
+            @elseif($user->attendance_status === '休憩中')
                 <button class="attendance__button--submit--break-out" type="submit" name="action" value="break_out">休憩戻</button>
-            
-            @elseif($status === '退勤済')
+            @elseif($user->attendance_status === '退勤済')
                 <p class="attendance__message">お疲れ様でした。</p>
             @endif
         </div>

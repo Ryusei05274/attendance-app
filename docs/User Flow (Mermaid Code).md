@@ -16,7 +16,7 @@ stateDiagram-v2
         state "出勤登録画面 (Top)\n(/attendance)" as 出勤登録画面:::user
         state "勤怠一覧画面\n(/attendance/list)" as 勤怠一覧画面:::user
         state "勤怠詳細画面\n(/attendance/detail/{id})" as 勤怠詳細画面:::user
-        state "申請一覧画面\n(/attendance/correction-request/list)" as 申請一覧画面:::user
+        state "申請一覧画面\n(/stamp_correction_request/list)" as 申請一覧画面:::user
 
         [*] --> 出勤登録画面
         出勤登録画面 --> 勤怠一覧画面 : 「一覧を見る」ボタン

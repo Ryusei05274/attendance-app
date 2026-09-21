@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // 誰の打刻か
             $table->date('date');        // 打刻日
-            $table->time('punch_in');    // 出勤時刻
-            $table->time('punch_out')->nullable(); // 退勤時刻
+            $table->time('clock_in')->nullable();  // 出勤時刻
+            $table->time('clock_out')->nullable(); // 退勤時刻
             $table->timestamps();
         });
     }

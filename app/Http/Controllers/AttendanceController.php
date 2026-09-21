@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Attendance;
-use App\Models\BreakLog; // 💡 休憩時間を管理するモデル（環境に合わせて変更してください）
+use App\Models\BreakLog; 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,7 +30,7 @@ class AttendanceController extends Controller
         // データベースの状態から最新のステータスを判定
         $status = '勤務外';
         if ($attendance) {
-            if ($attendance->punch_out) {
+            if ($attendance->clock_out) {
                 $status = '退勤済';
             } else {
                 // 未完了の休憩（break_outが空）があるか確認
@@ -42,11 +42,13 @@ class AttendanceController extends Controller
             }
         }
 
+        // 画面のBladeが `$user->attendance_status` を見ているため、判定したステータスをセットします
+        $user->attendance_status = $status;
+
         return view('user.attendance-register', [
             'user' => $user,
             'formattedDate' => $formattedDate,
             'formattedTime' => $formattedTime, 
-            'status' => $status, // 画面側のボタン切り替えに使用
         ]);
     }
 
@@ -72,13 +74,13 @@ class AttendanceController extends Controller
                     Attendance::create([
                         'user_id' => $user->id,
                         'date' => $today,
-                        'punch_in' => $nowTime,
+                        'clock_in' => $nowTime, 
                     ]);
                 }
                 break;
 
             case 'break_in': // 休憩入ボタン
-                if ($attendance && !$attendance->punch_out) {
+                if ($attendance && !$attendance->clock_out) { 
                     BreakLog::create([
                         'attendance_id' => $attendance->id,
                         'break_in' => $nowTime,
@@ -98,8 +100,8 @@ class AttendanceController extends Controller
                 break;
 
             case 'clock_out': // 退勤ボタン
-                if ($attendance && !$attendance->punch_out) {
-                    $attendance->update(['punch_out' => $nowTime]);
+                if ($attendance && !$attendance->clock_out) { 
+                    $attendance->update(['clock_out' => $nowTime]); 
                     // 退勤時はメッセージを送る
                     return redirect()->route('attendance.register')->with('status_message', 'お疲れ様でした。');
                 }
@@ -110,7 +112,7 @@ class AttendanceController extends Controller
         return redirect()->route('attendance.register');
     }
 
- public function list(Request $request)
+    public function list(Request $request)
     {
         $user = Auth::user();
 
@@ -131,17 +133,16 @@ class AttendanceController extends Controller
 
         // 画面表示用にデータを計算・加工する
         $attendanceList = $attendances->map(function ($attendance) {
-            
-            $punchIn = $attendance->punch_in ? Carbon::parse($attendance->punch_in)->format('H:i') : '';
-            $punchOut = $attendance->punch_out ? Carbon::parse($attendance->punch_out)->format('H:i') : '';
+            $punchIn = $attendance->clock_in ? Carbon::parse($attendance->clock_in)->format('H:i') : '';
+            $punchOut = $attendance->clock_out ? Carbon::parse($attendance->clock_out)->format('H:i') : ''; 
 
             $totalBreakSeconds = 0;
             $workTimeFormatted = '';
             $breakTimeFormatted = '';
 
-            if ($attendance->punch_in && $attendance->punch_out) {
-                $inTime = Carbon::parse($attendance->punch_in);
-                $outTime = Carbon::parse($attendance->punch_out);
+            if ($attendance->clock_in && $attendance->clock_out) { 
+                $inTime = Carbon::parse($attendance->clock_in);
+                $outTime = Carbon::parse($attendance->clock_out);
 
                 // 拘束時間（退勤 - 出勤）の総秒数
                 $totalDiffSeconds = $outTime->diffInSeconds($inTime);
@@ -184,12 +185,10 @@ class AttendanceController extends Controller
         });
 
         return view('user.user-attendance-list', [
-            'currentMonth' => $targetMonth->format('Y/m'), // 例: 2026/09
+            'currentMonth' => $targetMonth->format('Y/m'), 
             'prevMonth' => $prevMonth,
             'nextMonth' => $nextMonth,
             'formattedAttendanceRecords' => $attendanceList,
-
-            
         ]);
     }
 
@@ -214,11 +213,11 @@ class AttendanceController extends Controller
             ->get();
 
         // 4. データをまとめて詳細表示用のBladeに渡す
-        return view('admin.admin-detail', [ // 👈 ここを変更！
-         'user' => $user,
-         'attendanceRecord' => $attendance, // 👈 変数名を合わせます
-         'formattedDate' => $formattedDate,
-         'breakLogs' => $breakLogs,
-]);
+        return view('admin.admin-detail', [ 
+            'user' => $user,
+            'attendanceRecord' => $attendance, 
+            'formattedDate' => $formattedDate,
+            'breakLogs' => $breakLogs,
+        ]);
     }
 }

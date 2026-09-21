@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AttendanceController; 
-use App\Http\Controllers\StampCorrectionRequestController;
+use App\Http\Controllers\AttendanceCorrectionController;
 
 /*
 |--------------------------------------------------------------------------
