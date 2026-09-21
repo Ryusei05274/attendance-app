@@ -1,4 +1,4 @@
-mermaidstateDiagram-v2
+stateDiagram-v2
     %% スタイル定義
     classDef unauth fill:#fff,stroke:#333,stroke-width:2px;
     classDef user fill:#fff9c4,stroke:#fbc02d,stroke-width:2px;
