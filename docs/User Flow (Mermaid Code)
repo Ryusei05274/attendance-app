@@ -1,3 +1,4 @@
+```mermaid
 stateDiagram-v2
     %% スタイル定義
     classDef unauth fill:#fff,stroke:#333,stroke-width:2px;
@@ -25,3 +26,4 @@ stateDiagram-v2
 
     ログイン画面 --> 出勤登録画面 : ログイン成功
     ログイン後エリア --> ログイン画面 : ログアウト
+```

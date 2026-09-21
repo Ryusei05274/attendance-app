@@ -1,5 +1,5 @@
+```mermaid
 stateDiagram-v2
-    %% スタイル定義
     classDef unauth fill:#fff,stroke:#333,stroke-width:2px;
     classDef admin fill:#c8e6c9,stroke:#388e3c,stroke-width:2px;
 
@@ -25,3 +25,4 @@ stateDiagram-v2
 
     管理者_ログイン画面 --> スタッフ一覧 : ログイン成功
     管理者エリア --> 管理者_ログイン画面 : ログアウト
+```
