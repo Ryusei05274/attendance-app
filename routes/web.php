@@ -24,15 +24,20 @@ Route::middleware(['auth'])->group(function () {
     // 1. 勤怠画面の表示（GET通信）
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.register');
     
-    // 2. 打刻ボタンが押された時のステータス更新処理（POST通信）
+    // 2. 打刻ボタンのステータス更新処理（POST通信）
     Route::post('/attendance', [AttendanceController::class, 'updateStatus'])->name('attendance.update');
     
-    Route::get('/attendance/list', [AttendanceController::class, 'list'])->name('attendance.list');
+    // 3. 勤怠一覧画面（一般ユーザー）
+    Route::get('/attendance/list', [AttendanceController::class, 'index'])->name('attendance.list');
     
-    Route::get('/attendance/detail/{id}', [AttendanceController::class, 'showDetail'])->name('attendance.detail');
+    // 4. 勤怠詳細画面（一般ユーザー） 
+    Route::get('/attendance/detail/{attendance_id}', [AttendanceController::class, 'show'])->name('attendance.detail');
+    
+    // 5. 修正申請ボタン押下時の保存処理（POST通信） 
+    Route::post('/attendance/detail/{attendance_id}', [AttendanceController::class, 'updateDetailRequest'])->name('attendance.detail.update');
 
-    // 申請一覧画面の表示
-Route::get('/stamp_correction_request/list', [StampCorrectionRequestController::class, 'index'])
-    ->name('stamp_correction_request.index');
+    // 6. 申請一覧画面（一般ユーザー） 
+    Route::get('/attendance/correction-request/list', [AttendanceCorrectionController::class, 'index'])
+        ->name('attendance_corrections.index');
     
 });

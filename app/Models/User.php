@@ -43,4 +43,23 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+      /**
+     * リレーション：ユーザーが持つ複数の勤怠データ
+     */
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    /**
+     * リレーション：ユーザーが持つ複数の修正申請データ
+     */
+    public function attendanceCorrections()
+    {
+        return $this->hasMany(AttendanceCorrection::class);
+    }
+    
 }
+
+  

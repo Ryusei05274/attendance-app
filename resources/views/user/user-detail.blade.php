@@ -25,10 +25,11 @@
 
                     <div class="form__group">
                         <label class="form__header">日付</label>
-                        <div class="form__input-group">
-                            {{-- 日付は表示のみ（修正不可）。名前欄と同様に枠線（border）を外す --}}
-                            <input class="form__input form__input--date" type="text" value="{{ $data['year'] }}" readonly>
-                            <input class="form__input form__input--date" type="text" name="new_date" value="{{ $data['date'] }}" readonly>
+                        <div class="form__input-group form__input-group--date-box">
+                            <!-- inputからspanタグに変更し、枠線を無くします -->
+                            <span class="form__text-date form__text-date--year">{{ $data['year'] }}</span>
+                            <span class="form__text-date form__text-date--md">{{ $data['date_md'] }}</span>
+                            <input type="hidden" name="new_date" value="{{ $data['date'] }}">
                         </div>
                     </div>
 
@@ -115,13 +116,14 @@
                         </div>
                     </div>
 
-                    <div class="form__group">
-                        <label class="form__header">日付</label>
-                        <div class="form__input-group">
-                            <input class="form__input readonly" type="text" value="{{ $data['year'] }}" readonly>
-                            <input class="form__input readonly" type="text" value="{{ $data['date'] }}" readonly>
-                        </div>
-                    </div>
+<div class="form__group">
+    <label class="form__header">日付</label>
+    <div class="form__input-group form__input-group--date-box">
+        <!-- 先ほど作成した枠なしのテキスト表示（2026年 9月21日）に差し替えます -->
+        <span class="form__text-date form__text-date--year">{{ $data['year'] }}</span>
+        <span class="form__text-date form__text-date--md">{{ $data['date_md'] }}</span>
+    </div>
+</div>
 
                     <div class="form__group">
                         <label class="form__header">出勤・退勤</label>
@@ -138,10 +140,10 @@
                             <label class="form__header">{{ $index === 0 ? '休憩' : '休憩' . ($index + 1) }}</label>
                             <div class="form__input-group">
                                 <input class="form__input readonly" type="text" name="new_break_in[]"
-                                    value="{{ $break['break_in'] }}" readonly>
+                                    value="{{ $break['break_in'] ? \Carbon\Carbon::parse($break['break_in'])->format('H:i') : '' }}" readonly>
                                 <p>〜</p>
                                 <input class="form__input readonly" type="text" name="new_break_out[]"
-                                    value="{{ $break['break_out'] }}" readonly>
+                                    value="{{ $break['break_out'] ? \Carbon\Carbon::parse($break['break_out'])->format('H:i') : '' }}" readonly>
                             </div>
                         </div>
                     @endforeach

@@ -9,30 +9,23 @@ class AttendanceCorrection extends Model
 {
     use HasFactory;
 
-    /**
-     * 複数代入を許可するカラム（設計書に基づく項目一覧）
-     */
     protected $fillable = [
-        'user_id',
         'attendance_id',
-        'status',
-        'original_start_time',
-        'original_end_time',
+        'user_id',
+        'original_date',
         'new_clock_in',
         'new_clock_out',
         'comment',
+        'status',
         'approved_at',
     ];
 
-    /**
-     * データを取得する際の日時キャスト設定（必要に応じて）
-     */
     protected $casts = [
         'approved_at' => 'datetime',
     ];
 
     /**
-     * 紐づくユーザー（User）とのリレーション
+     * リレーション：所属するユーザー (親)
      */
     public function user()
     {
@@ -40,7 +33,7 @@ class AttendanceCorrection extends Model
     }
 
     /**
-     * 紐づく勤怠データ（Attendance）とのリレーション
+     * リレーション：所属する修正対象の勤怠データ (親)
      */
     public function attendance()
     {

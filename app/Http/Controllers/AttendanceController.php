@@ -112,22 +112,22 @@ class AttendanceController extends Controller
         return redirect()->route('attendance.register');
     }
 
-    public function list(Request $request)
+public function list(Request $request)
     {
         $user = Auth::user();
 
-        // 表示する対象の「月」を決定する（パラメータがなければ当月）
-        $monthInput = $request->input('month', Carbon::now()->format('Y-m'));
-        $targetMonth = Carbon::parse($monthInput);
+        // 1. 【修正】Bladeのリンクに合わせて 'month' から 'date' に変更
+        $monthInput = $request->input('date', Carbon::now()->format('Y-m'));
+        $date = Carbon::parse($monthInput . '-01'); // 【修正】Bladeが使う変数名 $date に合わせる
 
-        // 前月・翌月のリンク用URL文字列
-        $prevMonth = $targetMonth->copy()->subMonth()->format('Y-m');
-        $nextMonth = $targetMonth->copy()->addMonth()->format('Y-m');
+        // 2. 【修正】Bladeが使う変数名 $previousMonth と $nextMonth に合わせる
+        $previousMonth = $date->copy()->subMonth()->format('Y-m');
+        $nextMonth = $date->copy()->addMonth()->format('Y-m');
 
         // 指定された月の出勤レコードをすべて取得
         $attendances = Attendance::where('user_id', $user->id)
-            ->whereYear('date', $targetMonth->year)
-            ->whereMonth('date', $targetMonth->month)
+            ->whereYear('date', $date->year)
+            ->whereMonth('date', $date->month)
             ->orderBy('date', 'asc')
             ->get();
 
@@ -184,16 +184,16 @@ class AttendanceController extends Controller
             ];
         });
 
+        // 3. 【修正】Bladeが必要としている名前でデータを返却する
         return view('user.user-attendance-list', [
-            'currentMonth' => $targetMonth->format('Y/m'), 
-            'prevMonth' => $prevMonth,
+            'previousMonth' => $previousMonth,
+            'date' => $date,
             'nextMonth' => $nextMonth,
             'formattedAttendanceRecords' => $attendanceList,
         ]);
     }
-
-    /**
-     * 💡 勤怠詳細画面の表示処理
+ /**
+     * 💡 一般ユーザー用：勤怠詳細画面の表示処理 (GET)
      */
     public function showDetail($id)
     {
@@ -204,20 +204,71 @@ class AttendanceController extends Controller
             ->where('user_id', $user->id)
             ->firstOrFail();
 
-        // 2. 日付を「2026年09月06日」のような形式に整形
-        $formattedDate = Carbon::parse($attendance->date)->isoFormat('YYYY年MM月DD日');
+        // 2. 【修正】データベースの実態であるモデル「AttemdamceCorrectionRequest」を使って、承認待ちがあるか探します
+        $correction = \App\Models\AttendanceCorrection::where('attendance_id', $id)
+            ->where('user_id', $user->id)
+            ->where('status', 0) // 0: 承認待ち
+            ->first();
 
-        // 3. この出勤に紐づいている休憩データをすべて取得
+        // 3. 日付を「〇〇年」と「〇月〇日」に正確に分割します
+        $attendanceDate = Carbon::parse($attendance->date);
+        $yearFormatted  = $attendanceDate->isoFormat('YYYY年');
+        $dateFormatted  = $attendanceDate->isoFormat('M月D日');
+
+        // 4. 休憩データをすべて取得
         $breakLogs = BreakLog::where('attendance_id', $attendance->id)
             ->orderBy('break_in', 'asc')
             ->get();
 
-        // 4. データをまとめて詳細表示用のBladeに渡す
-        return view('admin.admin-detail', [ 
-            'user' => $user,
-            'attendanceRecord' => $attendance, 
+        // 5. 画面に渡すデータを組み立てます
+        $data = [
+            'id'          => $attendance->id,
+            'date'        => $attendance->date,
+            'year'        => $yearFormatted,
+            'date_md'     => $dateFormatted,
+            'clock_in'    => $correction ? Carbon::parse($correction->new_clock_in)->format('H:i') : ($attendance->clock_in ? Carbon::parse($attendance->clock_in)->format('H:i') : ''),
+            'clock_out'   => $correction ? Carbon::parse($correction->new_clock_out)->format('H:i') : ($attendance->clock_out ? Carbon::parse($attendance->clock_out)->format('H:i') : ''),
+            'comment'     => $correction ? $correction->comment : ($attendance->comment ?? ''),
+            'application' => $correction ? $correction : null,
+            'breaks'      => $breakLogs,
+        ];
+
+        $formattedDate = $attendanceDate->isoFormat('YYYY年MM月DD日(ddd)');
+
+        return view('user.user-detail', [ 
+            'user'          => $user,
+            'data'          => $data, 
             'formattedDate' => $formattedDate,
-            'breakLogs' => $breakLogs,
         ]);
     }
-}
+
+    /**
+     * 💡 「修正」ボタン押下時の、修正申請データの保存処理 (POST)
+     */
+    public function updateDetailRequest(Request $request, $id)
+    {
+        $request->validate([
+            'new_clock_in'  => 'required|date_format:H:i',
+            'new_clock_out' => 'required|date_format:H:i',
+            'comment'       => 'required|string',
+        ], [
+            'new_clock_in.required'  => '出勤時間は必須項目です。',
+            'new_clock_out.required' => '退勤時間は必須項目です。',
+            'comment.required'       => '備考を記入してください',
+        ]);
+
+        $user = Auth::user();
+
+        \App\Models\AttendanceCorrection::create([
+            'attendance_id' => $id,
+            'user_id'       => $user->id,
+            'original_date' => $request->input('new_date'),
+            'new_clock_in'  => $request->input('new_clock_in'),
+            'new_clock_out' => $request->input('new_clock_out'),
+            'comment'       => $request->input('comment'),
+            'status'        => 0, // 0を入れることで「承認待ち」状態にします
+        ]);
+
+        return redirect('/attendance/' . $id)->with('status_message', '修正申請を送信しました');
+    }
+} 
