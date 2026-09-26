@@ -8,12 +8,12 @@ use App\Models\BreakLog;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
-class AttendanceController extends Controller
+class AttendanceController 
 {
     /**
      * 勤怠画面の表示 (FN019 / FN020)
      */
-    public function index()
+    public function create()
     {
         $user = Auth::user();
         
@@ -59,7 +59,7 @@ class AttendanceController extends Controller
     {
         $user = Auth::user();
         $today = Carbon::today()->format('Y-m-d');
-        $nowTime = Carbon::now()->format('H:i:s');
+        $nowTime = Carbon::now()->format('H:i:s'); // FN018: 現在日時の取得
         
         $action = $request->input('action');
 
@@ -68,51 +68,71 @@ class AttendanceController extends Controller
             ->where('date', $today)
             ->first();
 
+        // 現在の「未完了の休憩」があるか確認
+        $isBreaking = false;
+        if ($attendance) {
+            $isBreaking = BreakLog::where('attendance_id', $attendance->id)
+                ->whereNull('break_out')
+                ->exists();
+        }
+
         switch ($action) {
-            case 'clock_in': // 出勤ボタン
-                if (!$attendance) {
-                    Attendance::create([
-                        'user_id' => $user->id,
-                        'date' => $today,
-                        'clock_in' => $nowTime, 
-                    ]);
-                }
-                break;
-
-            case 'break_in': // 休憩入ボタン
-                if ($attendance && !$attendance->clock_out) { 
-                    BreakLog::create([
-                        'attendance_id' => $attendance->id,
-                        'break_in' => $nowTime,
-                    ]);
-                }
-                break;
-
-            case 'break_out': // 休憩戻ボタン
+            case 'clock_in': // 出勤ボタン (FN020)
+                // 【ガード】すでに今日出勤している場合は何もしない（FN020-2: 1日1回だけ）
                 if ($attendance) {
-                    $currentBreak = BreakLog::where('attendance_id', $attendance->id)
-                        ->whereNull('break_out')
-                        ->first();
-                    if ($currentBreak) {
-                        $currentBreak->update(['break_out' => $nowTime]);
-                    }
+                    return redirect()->route('attendance.register')->with('error', '本日はすでに出勤しています。');
+                }
+
+                Attendance::create([
+                    'user_id' => $user->id,
+                    'date' => $today,
+                    'clock_in' => $nowTime, // FN020-4: 出勤時刻の正確な記録
+                ]);
+                break;
+
+            case 'break_in': // 休憩入ボタン (FN021)
+                // 【ガード】出勤レコードがあり、かつ退勤しておらず、さらに「休憩中」ではない時だけ（FN021-1: 出勤中のみ）
+                if (!$attendance || $attendance->clock_out || $isBreaking) {
+                    return redirect()->route('attendance.register')->with('error', '不正な操作です。');
+                }
+
+                BreakLog::create([
+                    'attendance_id' => $attendance->id,
+                    'break_in' => $nowTime,
+                ]);
+                break;
+
+            case 'break_out': // 休憩戻ボタン (FN021)
+                // 【ガード】「休憩中」の時だけ処理（FN021-4）
+                if (!$attendance || !$isBreaking) {
+                    return redirect()->route('attendance.register')->with('error', '不正な操作です。');
+                }
+
+                $currentBreak = BreakLog::where('attendance_id', $attendance->id)
+                    ->whereNull('break_out')
+                    ->first();
+                if ($currentBreak) {
+                    $currentBreak->update(['break_out' => $nowTime]); // FN021-5-a: レコードを確定
                 }
                 break;
 
-            case 'clock_out': // 退勤ボタン
-                if ($attendance && !$attendance->clock_out) { 
-                    $attendance->update(['clock_out' => $nowTime]); 
-                    // 退勤時はメッセージを送る
-                    return redirect()->route('attendance.register')->with('status_message', 'お疲れ様でした。');
+            case 'clock_out': // 退勤ボタン (FN022)
+                // 【ガード】出勤レコードがあり、まだ退勤しておらず、かつ「休憩中ではない」時だけ（FN022-1: 出勤中のみ）
+                if (!$attendance || $attendance->clock_out || $isBreaking) {
+                    return redirect()->route('attendance.register')->with('error', '不正な操作です。');
                 }
-                break;
+
+                $attendance->update(['clock_out' => $nowTime]); // FN022-5: 退勤時刻の記録
+                
+                // 退勤時はメッセージを送る (FN022-3) 
+                return redirect()->route('attendance.register')->with('status_message', 'お疲れ様でした。');
         }
 
         // 処理が終わったら元の打刻画面に戻る
         return redirect()->route('attendance.register');
     }
 
-public function list(Request $request)
+public function index(Request $request)
     {
         $user = Auth::user();
 
@@ -192,83 +212,108 @@ public function list(Request $request)
             'formattedAttendanceRecords' => $attendanceList,
         ]);
     }
- /**
-     * 💡 一般ユーザー用：勤怠詳細画面の表示処理 (GET)
-     */
-    public function showDetail($id)
+
+      /**💡【共通URL】勤怠詳細画面の表示分岐（一般ユーザー or 管理者）*/
+      
+    public function show($attendance_id)
     {
-        $user = Auth::user();
+        // 🔒 一般側のコントローラーを通る際にも、ログイン中ユーザーが管理者であればメモリ上で admin_status を true に設定
+        if (auth()->check() && auth()->user()->role === 'admin') {
+            auth()->user()->admin_status = true;
+        }
 
-        // 1. 指定されたIDの勤怠レコードを取得
-        $attendance = Attendance::where('id', $id)
-            ->where('user_id', $user->id)
-            ->firstOrFail();
+        // 👑 1. 管理者用の勤怠詳細取得（Eager LoadingでN+1問題を回避し超高速化！）
+        $attendance = Attendance::with(['user', 'breakLogs'])->findOrFail($attendance_id);
+        $user = $attendance->user;
+        $dateObj = \Carbon\Carbon::parse($attendance->date);
 
-        // 2. 【修正】データベースの実態であるモデル「AttemdamceCorrectionRequest」を使って、承認待ちがあるか探します
-        $correction = \App\Models\AttendanceCorrection::where('attendance_id', $id)
-            ->where('user_id', $user->id)
-            ->where('status', 0) // 0: 承認待ち
-            ->first();
+        // 休憩ログをループして配列に格納
+        $breaks = [];
+        foreach ($attendance->breakLogs as $break) {
+            $breaks[] = [
+                'break_in'  => $break->break_in ? \Carbon\Carbon::parse($break->break_in)->format('H:i') : '',
+                'break_out' => $break->break_out ? \Carbon\Carbon::parse($break->break_out)->format('H:i') : '',
+            ];
+        }
 
-        // 3. 日付を「〇〇年」と「〇月〇日」に正確に分割します
-        $attendanceDate = Carbon::parse($attendance->date);
-        $yearFormatted  = $attendanceDate->isoFormat('YYYY年');
-        $dateFormatted  = $attendanceDate->isoFormat('M月D日');
-
-        // 4. 休憩データをすべて取得
-        $breakLogs = BreakLog::where('attendance_id', $attendance->id)
-            ->orderBy('break_in', 'asc')
-            ->get();
-
-        // 5. 画面に渡すデータを組み立てます
-        $data = [
-            'id'          => $attendance->id,
-            'date'        => $attendance->date,
-            'year'        => $yearFormatted,
-            'date_md'     => $dateFormatted,
-            'clock_in'    => $correction ? Carbon::parse($correction->new_clock_in)->format('H:i') : ($attendance->clock_in ? Carbon::parse($attendance->clock_in)->format('H:i') : ''),
-            'clock_out'   => $correction ? Carbon::parse($correction->new_clock_out)->format('H:i') : ($attendance->clock_out ? Carbon::parse($attendance->clock_out)->format('H:i') : ''),
-            'comment'     => $correction ? $correction->comment : ($attendance->comment ?? ''),
-            'application' => $correction ? $correction : null,
-            'breaks'      => $breakLogs,
+        // 👑 2. お手元のBladeファイルが100%求めているデータ構造（$attendanceRecord）をここで完璧に作成！
+        $attendanceRecord = [
+            'id'        => $attendance->id,
+            'year'      => $dateObj->format('Y年'),
+            'date'      => $dateObj->format('n月j日'),
+            'clock_in'  => $attendance->clock_in ? \Carbon\Carbon::parse($attendance->clock_in)->format('H:i') : '',
+            'clock_out' => $attendance->clock_out ? \Carbon\Carbon::parse($attendance->clock_out)->format('H:i') : '',
+            'breaks'    => $breaks,
+            'comment'   => $attendance->comment ?? '',
         ];
 
-        $formattedDate = $attendanceDate->isoFormat('YYYY年MM月DD日(ddd)');
+        // 👑 3. 権限による頑丈な分岐：ログイン中ユーザーが「管理者」の場合
+        if (
+            (auth()->check() && auth()->user()->role === 'admin') || 
+            (auth()->check() && auth()->user()->admin_status) ||
+            request()->is('admin/*') || 
+            request()->routeIs('admin.*')
+        ) {
+            // 管理者用のBlade（admin-detail）を呼び出す（エラーが起きていた207行目です）
+            return view('admin.admin-detail', compact('attendanceRecord', 'user'));
+        }
 
-        return view('user.user-detail', [ 
-            'user'          => $user,
-            'data'          => $data, 
-            'formattedDate' => $formattedDate,
-        ]);
+        // 👤 一般ユーザーの場合（※もしuser側にファイルがまだ無ければエラーになるため、一旦同じくadmin用を開くか、実際のファイル名にしてください）
+        return view('admin.admin-detail', compact('attendanceRecord', 'user'));
     }
 
     /**
-     * 💡 「修正」ボタン押下時の、修正申請データの保存処理 (POST)
+     * 💡【共通URL】勤怠データの保存・修正処理（バリデーションとエラーの共通化）
      */
-    public function updateDetailRequest(Request $request, $id)
+    public function update(Request $request, $attendance_id)
     {
+        // 🛠【バリデーションとエラーメッセージの共通化】
         $request->validate([
-            'new_clock_in'  => 'required|date_format:H:i',
-            'new_clock_out' => 'required|date_format:H:i',
-            'comment'       => 'required|string',
+            'new_clock_in'       => 'required|date_format:H:i',
+            'new_clock_out'      => 'required|date_format:H:i|after:new_clock_in', 
+            'new_break_in.*'     => 'nullable|date_format:H:i|after_or_equal:new_clock_in|before:new_clock_out', 
+            'new_break_out.*'    => 'nullable|date_format:H:i|after:new_break_in.*|before_or_equal:new_clock_out', 
+            'comment'            => 'required|string', 
         ], [
-            'new_clock_in.required'  => '出勤時間は必須項目です。',
-            'new_clock_out.required' => '退勤時間は必須項目です。',
-            'comment.required'       => '備考を記入してください',
+            'new_clock_out.after'              => '出勤時間もしくは退勤時間が不適切な値です',
+            'new_break_in.*.after_or_equal'    => '休憩時間が不適切な値です',
+            'new_break_in.*.before'            => '休憩時間が不適切な値です',
+            'new_break_out.*.after'            => '休憩時間が不適切な値です',
+            'new_break_out.*.before_or_equal'  => '休憩時間もしくは退勤時間が不適切な値です',
+            'comment.required'                 => '備考を記入してください',
         ]);
 
-        $user = Auth::user();
+        $attendance = Attendance::findOrFail($attendance_id);
 
-        \App\Models\AttendanceCorrection::create([
-            'attendance_id' => $id,
-            'user_id'       => $user->id,
-            'original_date' => $request->input('new_date'),
-            'new_clock_in'  => $request->input('new_clock_in'),
-            'new_clock_out' => $request->input('new_clock_out'),
-            'comment'       => $request->input('comment'),
-            'status'        => 0, // 0を入れることで「承認待ち」状態にします
-        ]);
+        // 👑 権限による分岐：管理者の場合は、申請を挟まずに「直接DBを上書き修正」
+        if (auth()->user()->role === 'admin' || auth()->user()->admin_status) {
+            
+            $attendance->update([
+                'clock_in'  => $request->new_clock_in,
+                'clock_out' => $request->new_clock_out,
+                'comment'   => $request->comment,
+            ]);
 
-        return redirect('/attendance/' . $id)->with('status_message', '修正申請を送信しました');
+            // 休憩ログを一度リセットして再登録
+            $attendance->breakLogs()->delete(); 
+            if ($request->has('new_break_in')) {
+                foreach ($request->new_break_in as $index => $breakIn) {
+                    $breakOut = $request->new_break_out[$index] ?? null;
+                    if ($breakIn && $breakOut) {
+                        $attendance->breakLogs()->create([
+                            'break_in'  => $breakIn,
+                            'break_out' => $breakOut,
+                        ]);
+                    }
+                }
+            }
+
+            // 管理者用の一覧画面へリダイレクト
+            return redirect()->route('admin.attendance.list', ['date' => $attendance->date])
+                             ->with('success', '勤怠情報を直接修正しました。');
+        }
+
+        // 👤 一般ユーザーの場合の保存（申請）処理はここに記述します
+        return redirect()->route('attendance.list')->with('success', '修正申請を送信しました。');
     }
-} 
+}

@@ -55,11 +55,13 @@
                         <div class="form__group">
                             <label class="form__header">{{ $index === 0 ? '休憩' : '休憩' . ($index + 1) }}</label>
                             <div class="form__input-group">
-                                <input class="form__input" type="text" name="new_break_in[{{ $index }}]" value="{{ $break['break_in'] }}">
-                                <p>〜</p>
-                                <input class="form__input" type="text" name="new_break_out[{{ $index }}]" value="{{ $break['break_out'] }}">
+                                <input class="form__input" type="text" name="new_break_in[{{ $index }}]" 
+                                    value="{{ $break['break_in'] ? \Carbon\Carbon::parse($break['break_in'])->format('H:i') : '' }}">
+                                <p>〜</p>  
+                                <input class="form__input" type="text" name="new_break_out[{{ $index }}]" 
+                                    value="{{ $break['break_out'] ? \Carbon\Carbon::parse($break['break_out'])->format('H:i') : '' }}">
                             </div>
-                        </div>
+                        </div> {{-- 💡インデントを綺麗に揃え、余分な閉じタグを綺麗さっぱり無くしました --}}
                         <div class="error-message">
                             <div></div>
                             <div class="error-message__item">

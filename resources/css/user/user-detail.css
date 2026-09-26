@@ -25,15 +25,17 @@
     background: #fff;
     border: 1px solid #e1e1e1;
     border-radius: 10px;
+    height: auto !important;
+    overflow: hidden;
+    padding-bottom: 20px !important;
 }
 
 .form__group {
     display: grid;
     grid-template-columns: 30% 1fr;
     align-items: center;
-    height: auto;
-    /* 各行の上下に余白を取り、入力欄が区切り線に詰まらないようにする（管理者詳細と統一） */
-    padding: 1rem 0;
+    height: auto !important;
+    padding: 1.5rem 0;
 }
 
 .form__group:not(:first-of-type) {
